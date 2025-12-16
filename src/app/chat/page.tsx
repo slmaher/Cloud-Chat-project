@@ -55,11 +55,15 @@ export default function ChatPage() {
         .single();
       const { error: userRowError } = userLookup;
       let userRow = userLookup.data;
-
-      // If user doesn't exist in User table, create them
-      if (userRowError || !userRow) {
-        // Get the first available organization
-        const { data: orgs, error: orgError } = await supabase
+          const {
+            data: initialUserRow,
+            error: userRowError,
+          } = await supabase
+            .from("User")
+            .select("organizationId")
+            .eq("id", user.id)
+            .single();
+          let userRow = initialUserRow;
           .from("Organization")
           .select("id")
           .limit(1);
@@ -329,11 +333,12 @@ export default function ChatPage() {
             <h1 className="text-2xl font-bold text-yellow-600">
               Organization Chat
             </h1>
-            {userInfo && (
-              <p className="text-sm text-yellow-700 mt-1">
-                You are in:{" "}
-                <span className="font-semibold">
-                  {userInfo.organization.name}
+                const { data: fetchedRefreshedUserRow } = await supabase
+                  .from("User")
+                  .select("organizationId")
+                  .eq("id", refreshedUser.id)
+                  .single();
+                let refreshedUserRow = fetchedRefreshedUserRow;
                 </span>
               </p>
             )}
