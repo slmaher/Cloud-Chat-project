@@ -3,8 +3,6 @@ import { createSupabaseServer } from "@/lib/supabase-server";
 
 console.log("=== relay/route.ts module loaded ===");
 
-export const runtime = "edge";
-
 export async function POST(req: NextRequest) {
   console.log("=== /api/relay POST handler called ===");
   try {
