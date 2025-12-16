@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 
 async function ensureUserInTable(supabase: ReturnType<typeof createSupabaseBrowser>) {
@@ -45,7 +45,6 @@ async function ensureUserInTable(supabase: ReturnType<typeof createSupabaseBrows
 
 export default function AuthCallbackPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createSupabaseBrowser();
@@ -87,6 +86,7 @@ export default function AuthCallbackPage() {
           router.replace("/chat");
         }
       } catch (err) {
+        console.error(err);
         setError("An unexpected error occurred");
         setLoading(false);
       }

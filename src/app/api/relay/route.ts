@@ -25,11 +25,13 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('Fetching user with org...');
-    let { data: userData, error: fetchError } = await supabase
+    const userLookup = await supabase
       .from('User')
       .select('id, organizationId')
       .eq('id', user.id)
       .single();
+    const { error: fetchError } = userLookup;
+    let userData = userLookup.data;
     
     // If user doesn't exist, create them
     if (fetchError || !userData) {

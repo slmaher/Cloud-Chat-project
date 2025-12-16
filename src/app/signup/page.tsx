@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import Link from "next/link";
 
@@ -12,7 +11,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const router = useRouter();
   const supabase = createSupabaseBrowser();
 
   // Organization options - these IDs should match what's in your database
@@ -59,6 +57,7 @@ export default function SignupPage() {
         setSelectedOrg("");
       }
     } catch (err) {
+      console.error(err);
       setError("An unexpected error occurred. Please try again.");
     }
 

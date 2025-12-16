@@ -48,11 +48,13 @@ export default function ChatPage() {
       }
 
       // Fetch the user's row to get organizationId
-      let { data: userRow, error: userRowError } = await supabase
+      const userLookup = await supabase
         .from("User")
         .select("organizationId")
         .eq("id", user.id)
         .single();
+      const { error: userRowError } = userLookup;
+      let userRow = userLookup.data;
 
       // If user doesn't exist in User table, create them
       if (userRowError || !userRow) {
@@ -79,20 +81,20 @@ export default function ChatPage() {
         });
 
         if (insertError) {
-          if (insertError.code === '23505') {
+          if (insertError.code === "23505") {
             // User already exists, try to fetch again
-            const { data: retryUserRow, error: retryError } = await supabase
+            const retryLookup = await supabase
               .from("User")
               .select("organizationId")
               .eq("id", user.id)
               .single();
-            
-            if (retryError || !retryUserRow) {
+
+            if (retryLookup.error || !retryLookup.data) {
               setError("Could not find user organization.");
               setLoading(false);
               return;
             }
-            userRow = retryUserRow;
+            userRow = retryLookup.data;
           } else {
             setError("Failed to create user: " + insertError.message);
             setLoading(false);
@@ -100,18 +102,18 @@ export default function ChatPage() {
           }
         } else {
           // Fetch the newly created user
-          const { data: newUserRow, error: newUserError } = await supabase
+          const newUserLookup = await supabase
             .from("User")
             .select("organizationId")
             .eq("id", user.id)
             .single();
-          
-          if (newUserError || !newUserRow) {
+
+          if (newUserLookup.error || !newUserLookup.data) {
             setError("Could not find newly created user.");
             setLoading(false);
             return;
           }
-          userRow = newUserRow;
+          userRow = newUserLookup.data;
         }
       }
 
@@ -130,7 +132,7 @@ export default function ChatPage() {
 
       setUserInfo({
         organizationId: userRow.organizationId,
-        organization: { name: orgData.name }
+        organization: { name: orgData.name },
       });
 
       // Now fetch messages for the user's organization
@@ -146,10 +148,13 @@ export default function ChatPage() {
         setError(error.message);
       } else {
         // Transform the data to handle AI bot messages
-        const transformedMessages = (data || []).map(msg => ({
+        const transformedMessages = (data || []).map((msg) => ({
           ...msg,
           userId: msg.userId,
-          user: msg.userId === '00000000-0000-0000-0000-00000000a1b0' ? null : msg.user
+          user:
+            msg.userId === "00000000-0000-0000-0000-00000000a1b0"
+              ? null
+              : msg.user,
         }));
         setMessages(transformedMessages);
       }
@@ -191,10 +196,10 @@ export default function ChatPage() {
       // Insert AI bot message immediately from the frontend
       if (userInfo?.organizationId) {
         const aiUserId =
-          userInfo.organizationId === 'org-a-uuid-0000-0000-000000000001'
-            ? 'ai-bot-org-a-uuid'
-            : userInfo.organizationId === 'org-b-uuid-0000-0000-000000000002'
-            ? 'ai-bot-org-b-uuid'
+          userInfo.organizationId === "org-a-uuid-0000-0000-000000000001"
+            ? "ai-bot-org-a-uuid"
+            : userInfo.organizationId === "org-b-uuid-0000-0000-000000000002"
+            ? "ai-bot-org-b-uuid"
             : undefined;
         if (aiUserId) {
           await supabase.from("Message").insert({
@@ -218,11 +223,12 @@ export default function ChatPage() {
         return;
       }
 
-      let { data: refreshedUserRow } = await supabase
+      const refreshedUserRowLookup = await supabase
         .from("User")
         .select("organizationId")
         .eq("id", refreshedUser.id)
         .single();
+      let refreshedUserRow = refreshedUserRowLookup.data;
 
       // If user doesn't exist, create them
       if (!refreshedUserRow) {
@@ -249,14 +255,14 @@ export default function ChatPage() {
         });
 
         if (insertError) {
-          if (insertError.code === '23505') {
+          if (insertError.code === "23505") {
             // User already exists, try to fetch again
-            const { data: retryUserRow } = await supabase
+            const retryLookup = await supabase
               .from("User")
               .select("organizationId")
               .eq("id", refreshedUser.id)
               .single();
-            refreshedUserRow = retryUserRow;
+            refreshedUserRow = retryLookup.data;
           } else {
             setError("Failed to create user: " + insertError.message);
             setLoading(false);
@@ -264,12 +270,12 @@ export default function ChatPage() {
           }
         } else {
           // Fetch the newly created user
-          const { data: newUserRow } = await supabase
+          const newUserLookup = await supabase
             .from("User")
             .select("organizationId")
             .eq("id", refreshedUser.id)
             .single();
-          refreshedUserRow = newUserRow;
+          refreshedUserRow = newUserLookup.data;
         }
       }
 
@@ -286,10 +292,13 @@ export default function ChatPage() {
         .order("createdAt", { ascending: true });
 
       // Transform the data to handle AI bot messages
-      const transformedMessages = (refreshedMessages || []).map(msg => ({
+      const transformedMessages = (refreshedMessages || []).map((msg) => ({
         ...msg,
         userId: msg.userId,
-        user: msg.userId === '00000000-0000-0000-0000-00000000a1b0' ? null : msg.user
+        user:
+          msg.userId === "00000000-0000-0000-0000-00000000a1b0"
+            ? null
+            : msg.user,
       }));
       setMessages(transformedMessages);
     } catch (err) {
@@ -317,10 +326,15 @@ export default function ChatPage() {
       <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6 border border-yellow-200 flex flex-col h-[80vh]">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-center sm:text-left">
-            <h1 className="text-2xl font-bold text-yellow-600">Organization Chat</h1>
+            <h1 className="text-2xl font-bold text-yellow-600">
+              Organization Chat
+            </h1>
             {userInfo && (
               <p className="text-sm text-yellow-700 mt-1">
-                You are in: <span className="font-semibold">{userInfo.organization.name}</span>
+                You are in:{" "}
+                <span className="font-semibold">
+                  {userInfo.organization.name}
+                </span>
               </p>
             )}
           </div>
@@ -333,23 +347,36 @@ export default function ChatPage() {
             {signingOut ? "Signing out..." : "Log out"}
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto mb-4 px-2" style={{ minHeight: 0 }}>
+        <div
+          className="flex-1 overflow-y-auto mb-4 px-2"
+          style={{ minHeight: 0 }}
+        >
           <div className="space-y-3">
             {messages.length === 0 && (
-              <div className="text-yellow-400 text-center">No messages yet.</div>
+              <div className="text-yellow-400 text-center">
+                No messages yet.
+              </div>
             )}
             {messages.map((msg) => (
               <div key={msg.id} className="flex flex-col">
-                {(msg.userId === "ai-bot-org-a-uuid" || msg.userId === "ai-bot-org-b-uuid") ? (
-                  <span className="text-sm text-purple-700 font-extrabold italic tracking-wide">🤖 AI Bot</span>
+                {msg.userId === "ai-bot-org-a-uuid" ||
+                msg.userId === "ai-bot-org-b-uuid" ? (
+                  <span className="text-sm text-purple-700 font-extrabold italic tracking-wide">
+                    🤖 AI Bot
+                  </span>
                 ) : (
-                  <span className="text-sm text-yellow-700 font-semibold">{msg.user?.email || "Unknown"}</span>
+                  <span className="text-sm text-yellow-700 font-semibold">
+                    {msg.user?.email || "Unknown"}
+                  </span>
                 )}
-                <span className={
-                  (msg.userId === "ai-bot-org-a-uuid" || msg.userId === "ai-bot-org-b-uuid")
-                    ? "bg-purple-200 border-l-4 border-purple-500 rounded px-4 py-3 text-purple-600 mt-1 w-fit max-w-[80%] shadow-md"
-                    : "bg-yellow-100 rounded px-3 py-2 text-yellow-900 mt-1 w-fit max-w-[80%]"
-                }>
+                <span
+                  className={
+                    msg.userId === "ai-bot-org-a-uuid" ||
+                    msg.userId === "ai-bot-org-b-uuid"
+                      ? "bg-purple-200 border-l-4 border-purple-500 rounded px-4 py-3 text-purple-600 mt-1 w-fit max-w-[80%] shadow-md"
+                      : "bg-yellow-100 rounded px-3 py-2 text-yellow-900 mt-1 w-fit max-w-[80%]"
+                  }
+                >
                   {msg.content}
                 </span>
                 <span className="text-xs text-yellow-400 mt-1">
@@ -373,12 +400,14 @@ export default function ChatPage() {
           <button
             type="submit"
             className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-4 py-2 rounded transition"
-                    disabled={loading || !input.trim()}
+            disabled={loading || !input.trim()}
           >
             Send
           </button>
         </form>
-        {error && <div className="mt-2 text-red-600 text-center text-sm">{error}</div>}
+        {error && (
+          <div className="mt-2 text-red-600 text-center text-sm">{error}</div>
+        )}
       </div>
     </div>
   );
