@@ -11,7 +11,7 @@ interface Message {
   userId: string;
   user: {
     email: string;
-  };
+  } | null;
 }
 
 interface UserInfo {
@@ -48,22 +48,18 @@ export default function ChatPage() {
       }
 
       // Fetch the user's row to get organizationId
-      const userLookup = await supabase
+      const {
+        data: userRowData,
+        error: userRowError,
+      } = await supabase
         .from("User")
         .select("organizationId")
         .eq("id", user.id)
         .single();
-      const { error: userRowError } = userLookup;
-      let userRow = userLookup.data;
-          const {
-            data: initialUserRow,
-            error: userRowError,
-          } = await supabase
-            .from("User")
-            .select("organizationId")
-            .eq("id", user.id)
-            .single();
-          let userRow = initialUserRow;
+      let userRow = userRowData;
+
+      if (userRowError || !userRow) {
+        const { data: orgs, error: orgError } = await supabase
           .from("Organization")
           .select("id")
           .limit(1);
@@ -81,7 +77,7 @@ export default function ChatPage() {
           id: user.id,
           email: user.email,
           role: "STUDENT",
-          organizationId: organizationId,
+          organizationId,
         });
 
         if (insertError) {
@@ -333,13 +329,9 @@ export default function ChatPage() {
             <h1 className="text-2xl font-bold text-yellow-600">
               Organization Chat
             </h1>
-                const { data: fetchedRefreshedUserRow } = await supabase
-                  .from("User")
-                  .select("organizationId")
-                  .eq("id", refreshedUser.id)
-                  .single();
-                let refreshedUserRow = fetchedRefreshedUserRow;
-                </span>
+            {userInfo && (
+              <p className="text-sm text-yellow-700 mt-1">
+                You are in: <span className="font-semibold">{userInfo.organization.name}</span>
               </p>
             )}
           </div>
