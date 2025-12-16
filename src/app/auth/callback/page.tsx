@@ -4,17 +4,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 
-async function ensureUserInTable(supabase: ReturnType<typeof createSupabaseBrowser>) {
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+async function ensureUserInTable(
+  supabase: ReturnType<typeof createSupabaseBrowser>
+) {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
   if (userError || !user) return;
 
   // Get the selected organization from localStorage
   let selectedOrgId = null;
-  if (typeof window !== 'undefined') {
-    const selectedOrg = localStorage.getItem('selectedOrg');
+  if (typeof window !== "undefined") {
+    const selectedOrg = localStorage.getItem("selectedOrg");
     if (selectedOrg) {
       selectedOrgId = selectedOrg;
-      localStorage.removeItem('selectedOrg');
+      localStorage.removeItem("selectedOrg");
     }
   }
 
@@ -30,9 +35,12 @@ async function ensureUserInTable(supabase: ReturnType<typeof createSupabaseBrows
   if (!selectedOrgId) return;
 
   // Update the user's organizationId by email
-  await supabase.from("User").update({
-    organizationId: selectedOrgId,
-  }).eq('email', user.email);
+  await supabase
+    .from("User")
+    .update({
+      organizationId: selectedOrgId,
+    })
+    .eq("email", user.email);
 
   // Insert if not found (will fail gracefully if already exists)
   await supabase.from("User").insert({
@@ -54,34 +62,40 @@ export default function AuthCallbackPage() {
     async function handleAuthCallback() {
       if (didRun) return;
       didRun = true;
-      
+
       try {
         setLoading(true);
-        
+
         // Wait a moment for auth to settle
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         // Get the current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
         if (sessionError) {
           setError(sessionError.message);
           setLoading(false);
           return;
         }
-        
+
         if (session) {
           await ensureUserInTable(supabase);
           router.replace("/chat");
         } else {
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
+          const {
+            data: { user },
+            error: userError,
+          } = await supabase.auth.getUser();
+
           if (userError || !user) {
             setError("No authenticated user found");
             setLoading(false);
             return;
           }
-          
+
           await ensureUserInTable(supabase);
           router.replace("/chat");
         }
@@ -91,7 +105,7 @@ export default function AuthCallbackPage() {
         setLoading(false);
       }
     }
-    
+
     handleAuthCallback();
   }, [router, supabase]);
 
@@ -112,11 +126,13 @@ export default function AuthCallbackPage() {
             </button>
           </div>
         ) : loading ? (
-          <div className="text-yellow-700">Please wait while we log you in...</div>
+          <div className="text-yellow-700">
+            Please wait while we log you in...
+          </div>
         ) : (
           <div className="text-green-600">Successfully logged in!</div>
         )}
       </div>
     </div>
   );
-} 
+}
