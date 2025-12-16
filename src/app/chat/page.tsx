@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createSupabaseBrowser();
@@ -297,16 +298,40 @@ export default function ChatPage() {
     }
   }
 
+  async function handleSignOut() {
+    setSigningOut(true);
+    setError(null);
+    const { error: signOutError } = await supabase.auth.signOut();
+    setSigningOut(false);
+
+    if (signOutError) {
+      setError(signOutError.message);
+      return;
+    }
+
+    router.push("/login");
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-yellow-50">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow p-6 border border-yellow-200 flex flex-col h-[80vh]">
-        <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-yellow-600">Organization Chat</h1>
-          {userInfo && (
-            <p className="text-sm text-yellow-700 mt-1">
-              You are in: <span className="font-semibold">{userInfo.organization.name}</span>
-            </p>
-          )}
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl font-bold text-yellow-600">Organization Chat</h1>
+            {userInfo && (
+              <p className="text-sm text-yellow-700 mt-1">
+                You are in: <span className="font-semibold">{userInfo.organization.name}</span>
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="self-center rounded border border-yellow-300 px-4 py-2 text-sm font-semibold text-yellow-700 transition hover:bg-yellow-100 disabled:opacity-50"
+            disabled={signingOut}
+          >
+            {signingOut ? "Signing out..." : "Log out"}
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto mb-4 px-2" style={{ minHeight: 0 }}>
           <div className="space-y-3">
